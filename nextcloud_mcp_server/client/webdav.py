@@ -2,15 +2,16 @@
 
 import logging
 import mimetypes
-import xml.etree.ElementTree as ET
 from email.utils import parsedate_to_datetime
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import quote, unquote
 from xml.sax.saxutils import escape as xml_escape
 
+import defusedxml.ElementTree as ET
 from httpx import HTTPStatusError
 
 from nextcloud_mcp_server.observability.metrics import document_scan_truncated_total
+from nextcloud_mcp_server.utils.path import sanitize_webdav_path
 
 from .base import BaseNextcloudClient
 
@@ -60,7 +61,7 @@ class WebDAVClient(BaseNextcloudClient):
         and MCP-tool inputs are raw). It is encoded exactly once, so passing an
         already-encoded path would double-encode it (``%20`` → ``%2520``).
         """
-        return f"{self._get_webdav_base_path()}/{_encode_dav_path(path.lstrip('/'))}"
+        return f"{self._get_webdav_base_path()}/{sanitize_webdav_path(path)}"
 
     async def delete_resource(self, path: str) -> Dict[str, Any]:
         """Delete a resource (file or directory) via WebDAV DELETE."""
@@ -897,7 +898,7 @@ class WebDAVClient(BaseNextcloudClient):
         username = self.username
         scope_path = f"/files/{username}"
         if scope:
-            scope_path = f"{scope_path}/{scope.lstrip('/')}"
+            scope_path = f"{scope_path}/{sanitize_webdav_path(scope)}"
 
         # Build property list
         prop_xml = "\n".join([self._property_to_xml(prop) for prop in properties])
@@ -1128,7 +1129,7 @@ class WebDAVClient(BaseNextcloudClient):
                 <d:prop>
                     <d:displayname/>
                 </d:prop>
-                <d:literal>{pattern}</d:literal>
+                <d:literal>{escape_xml(pattern)}</d:literal>
             </d:like>
         """
 
@@ -1300,7 +1301,7 @@ class WebDAVClient(BaseNextcloudClient):
                 <d:prop>
                     <oc:tags/>
                 </d:prop>
-                <d:literal>%{tag_name}%</d:literal>
+                <d:literal>%{escape_xml(tag_name)}%</d:literal>
             </d:like>
         """
 
