@@ -1129,7 +1129,7 @@ class WebDAVClient(BaseNextcloudClient):
                 <d:prop>
                     <d:displayname/>
                 </d:prop>
-                <d:literal>{escape_xml(pattern)}</d:literal>
+                <d:literal>{xml_escape(pattern)}</d:literal>
             </d:like>
         """
 
@@ -1301,7 +1301,7 @@ class WebDAVClient(BaseNextcloudClient):
                 <d:prop>
                     <oc:tags/>
                 </d:prop>
-                <d:literal>%{escape_xml(tag_name)}%</d:literal>
+                <d:literal>%{xml_escape(tag_name)}%</d:literal>
             </d:like>
         """
 
